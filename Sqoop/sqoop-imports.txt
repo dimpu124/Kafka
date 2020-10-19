@@ -1,0 +1,22 @@
+## IMPORT ##
+
+--Default number of maps - 4
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks
+
+hadoop fs -ls stocks
+hadoop fs -cat stocks/part-m-00001
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks -m 2 --target-dir /user/hirw/sqoop/stocks_nmaps
+
+hadoop fs -ls sqoop/stocks_nmaps
+hadoop fs -cat sqoop/stocks_nmaps/part-m-00001
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks -m 1 --target-dir /user/hirw/sqoop/stocks_terminated --fields-terminated-by '\t' --enclosed-by '"'
+
+hadoop fs -ls sqoop/stocks_terminated
+hadoop fs -cat sqoop/stocks_terminated/part-m-00000
+
+sqoop import --connect jdbc:mysql://ip-172-31-45-216.ec2.internal/training --table stocks --columns "symbol,name,trade_date,volume" --where "id > 5" -m 1 --target-dir /user/hirw/sqoop/stocks_selective
+
+hadoop fs -ls sqoop/stocks_selective
+hadoop fs -cat sqoop/stocks_selective/part-m-00000
