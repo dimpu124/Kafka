@@ -1,4 +1,3 @@
-### www.hadoopinrealworld ###
 ### Apache Sqoop - Hive & Export ###
 
 ## EXPORT ##
