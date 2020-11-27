@@ -1,0 +1,36 @@
+export password='Saumya124iter!'
+export sqlserver="devsales7"
+export database="devSales"
+
+
+export serverConnect="jdbc:sqlserver://$sqlserver.database.windows.net:1433;user=dev;password=$password"
+export serverDbConnect="jdbc:sqlserver://$sqlserver.database.windows.net:1433;user=dev;password=$password;database=$database"
+
+
+sqoop list-tables --connect jdbc:sqlserver://$sqlserver.database.windows.net:1433;user=dev;password=$password;database=$database
+
+
+
+sqoop import --connect $serverDbConnect --query 'select * from SalesLT.SalesOrderHeader WHERE $CONDITIONS ' --target-dir '/usr/games/SalesOrderHeader' \
+--create-hive-table \
+--hive-table SalesOrderHeader \
+--hive-import -m 1
+
+
+sqoop import --connect $serverDbConnect --query 'select * from SalesLT.Customer WHERE $CONDITIONS ' --target-dir '/usr/games/Customer' \
+--create-hive-table \
+--hive-table Customer \
+--hive-import -m 1
+
+sqoop import --connect $serverDbConnect \
+--query 'select * from SalesLT.SalesOrderDetail WHERE $CONDITIONS ' \
+--target-dir '/usr/games/SalesOrderDetail' \
+--create-hive-table \
+--hive-table SalesOrderDetail \
+--hive-import -m 1
+
+sqoop import --connect $serverDbConnect --query \
+'SELECT ProductID,Name,ProductNumber,Color,StandardCost,ListPrice,Size,Weight,SellStartDate,SellEndDate FROM SalesLT.Product WHERE $CONDITIONS ' --target-dir '/usr/games/Product' \
+--create-hive-table \
+--hive-table Product \
+--hive-import -m 1
