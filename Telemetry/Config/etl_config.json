@@ -1,0 +1,34 @@
+{
+	"transform": {
+		"default": [154992],
+		"type1": [-48],
+		"type2": [155138],
+		"type3": [4550]
+	},
+	"sqlserver": {
+		"insert": true,
+		"load": {
+			"url": "jdbc:sqlserver://localhost:1433/Spark",
+			"driver": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+			"dbtable": "EP_INFO_VIEW",
+			"user": "user",
+			"password": "password"
+		},
+		"save": {
+			"url": "jdbc:sqlserver://localhost:1433/Spark",
+			"driver": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+			"dbtable": "ETL_RESULT",
+			"user": "user",
+			"password": "password"
+		}
+	},
+	"file": {
+		"write": false,
+		"load": {
+			"path": "C:\\Users\\Saumya.Sahu\\OneDrive - EY\\Desktop\\SparkData\\data\\"
+		},
+		"save": {
+			"path": "loaded_data"
+		}
+	}
+}
