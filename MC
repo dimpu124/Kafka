@@ -1,0 +1,75 @@
+from pyspark.sql import SparkSession,functions as f
+import collections
+
+
+def main():
+    spark = SparkSession.builder.appName("FlipkatMC").getOrCreate()
+    spark.sparkContext.setLogLevel("ERROR")
+
+    osdata,gender,place = extract(spark)
+    gp2,gjdfcon,placeselectjof=transformation(osdata,gender,place)
+    load(gp2,gjdfcon,placeselectjof)
+
+
+def extract(spark):
+
+
+    ostype = spark.read.json("C:\\Users\\sahus\\Desktop\\Flipkart\\ostype")
+
+    gender = spark.read.json("C:\\Users\\sahus\\Desktop\\Flipkart\\gender.json")
+
+    place = spark.read.json("C:\\Users\\sahus\\Desktop\\Flipkart\\storetype.json")
+
+
+
+    return ostype,gender,place
+
+def transformation(ostype,gender,place):
+    def ct(li):
+        ct = collections.Counter(li)
+        return str(ct)[8:-1]
+
+    func = f.udf(ct)
+
+    #ostype
+    df = ostype.selectExpr("campaign_id", "cast(event_time as date) as date", "event_type", "os_type", "user_id",
+                           "place_id",
+                           "hour(timestamp(event_time)) as hr")
+    gp1 = df.groupby("campaign_id", "os_type", "date", "hr").agg(f.collect_list("event_type").alias("ev"))
+    gpcol1 = gp1.withColumn("type", f.lit('ostype'))
+    ostypecol2 = gpcol1.withColumn("value", gpcol1.os_type)
+    ostypecol2.drop("os_type")
+    gp2 = ostypecol2.withColumn("event_type", func("ev")).drop("ev")
+
+    #Gender
+    genderjoin = df.join(gender, "user_id")
+    gjdf = genderjoin.groupBy("campaign_id", "date", "hr", "gender").agg(f.collect_list("event_type").alias("gv"))
+    gjdfcol1 = gjdf.withColumn("type", f.lit('gender'))
+    gjdfcol2 = gjdfcol1.withColumn("value", gjdfcol1.gender)
+    gjdfcol2.drop("gender")
+    gjdfcon = gjdfcol2.withColumn("event_type", func("gv")).drop("gv")
+
+
+    #Place_id
+    placeselect = place.select(f.explode("place_ids").alias("place_id"), "store_name")
+    placeselectj = df.join(placeselect, "place_id")
+    placeselectjo = placeselectj.groupBy("campaign_id", "date", "hr", "store_name").agg(
+        f.collect_list("event_type").alias("gv"))
+    placeselectjocol1 = placeselectjo.withColumn("type", f.lit('store_name'))
+    placeselectjocol2 = placeselectjocol1.withColumn("value", placeselectjocol1.store_name)
+    placeselectjocol2.drop("store_name")
+    placeselectjof = placeselectjocol2.withColumn("event_type", func("gv")).drop("gv")
+
+    return gp2,gjdfcon,placeselectjof
+
+def load(gp2,gjdfcon,placeselectjof):
+    gp2.coalesce(1).write.mode("overwrite").format('json').save('C:/Users/sahus/Desktop/Flipkart/outputostype.json')
+
+    gjdfcon.coalesce(1).write.mode("overwrite").format('json').save('C:/Users/sahus/Desktop/Flipkart/outputgender.json')
+
+    placeselectjof.coalesce(1).write.mode("overwrite").format('json').save(
+        'C:/Users/sahus/Desktop/Flipkart/outputplace.json')
+
+
+if __name__ == "__main__":
+    main()
